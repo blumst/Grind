@@ -1,0 +1,48 @@
+﻿@page
+@model GrindSoft.Pages.SendMessageModel
+@{
+    ViewData["Title"] = "Send Discord Message";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - GrindSoft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Send Discord Message</h2>
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label for="AccessToken" class="form-label">Access Token</label>
+                <input type="text" class="form-control" id="AccessToken" name="AccessToken" value="@Model.AccessToken" required />
+            </div>
+            <div class="mb-3">
+                <label for="ChannelId" class="form-label">Channel ID</label>
+                <input type="text" class="form-control" id="ChannelId" name="ChannelId" value="@Model.ChannelId" required />
+            </div>
+            <div class="mb-3">
+                <label for="Message" class="form-label">Message</label>
+                <textarea class="form-control" id="Message" name="Message" rows="4" required>@Model.Message</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(Model.Response))
+        {
+            <div class="alert alert-info mt-4" role="alert">
+                @Model.Response
+            </div>
+        }
+    </div>
+
+    <!-- Bootstrap JS and dependencies (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

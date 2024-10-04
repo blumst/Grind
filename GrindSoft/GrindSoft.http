@@ -1,0 +1,6 @@
+@GrindSoft_HostAddress = http://localhost:5188
+
+GET {{GrindSoft_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
