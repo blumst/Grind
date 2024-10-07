@@ -13,6 +13,9 @@ namespace GrindSoft.Pages
         public string AccessToken { get; set; }
 
         [BindProperty]
+        public string UserAgent { get; set; }
+
+        [BindProperty]
         public string? ServerId { get; set; }
 
         [BindProperty]
@@ -38,7 +41,7 @@ namespace GrindSoft.Pages
 
             try
             {
-                await _discordMessageClient.SendMessageAsync(AccessToken, ChannelId, Message, ServerId);
+                await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, Message, ServerId);
                 Response = "Message successfully sent.";
             }
             catch (Exception ex)

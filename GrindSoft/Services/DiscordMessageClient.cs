@@ -25,18 +25,8 @@ namespace GrindSoft.Services
             { "X-Discord-Timezone", "Europe/Kyiv" }
         };
 
-        private readonly List<string> _userAgents =
-        [
-            "Mozilla/5.0 (Windows NT 10.1; Win64; x64; en-US) AppleWebKit/603.22 (KHTML, like Gecko) Chrome/53.0.1599.252 Safari/602",
-            "Mozilla/5.0 (Windows; Windows NT 6.1; x64; en-US) AppleWebKit/600.30 (KHTML, like Gecko) Chrome/51.0.2499.368 Safari/603",
-            "Mozilla/5.0 (Windows; Windows NT 6.3; WOW64; en-US) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/51.0.1067.380 Safari/534",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 9_2_8; en-US) AppleWebKit/600.14 (KHTML, like Gecko) Chrome/50.0.2334.114 Safari/534",
-            "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 9_1_8) AppleWebKit/601.16 (KHTML, like Gecko) Chrome/48.0.3457.379 Safari/603",
-            "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 8_2_2; en-US) Gecko/20100101 Firefox/53.4",
-            "Mozilla/5.0 (Windows; U; Windows NT 10.1;; en-US) AppleWebKit/536.9 (KHTML, like Gecko) Chrome/55.0.2545.159 Safari/603.0 Edge/13.87607"
-        ];
 
-        public async Task SendMessageAsync(string accessToken, string channelId, string message, string serverId = "@me")
+        public async Task SendMessageAsync(string accessToken, string userAgent, string channelId, string message, string serverId = "@me")
         {
             string url = $"{_discordSettings.BaseUrl}/{channelId}/messages";
 
@@ -49,18 +39,18 @@ namespace GrindSoft.Services
                 flags = 0
             };
 
-            Task.Run(() => SendTypingAsync(accessToken, channelId, serverId));
+            Task.Run(() => SendTypingAsync(accessToken, userAgent, channelId, serverId));
 
             await url
                 .WithHeaders(_headers)
                 .WithHeader("Authorization", $"{accessToken}")
                 .WithHeader("Referer", $"https://discord.com/channels/{serverId}/{channelId}")
-                .WithHeader("User-Agent", GetRandomUserAgent())
+                .WithHeader("User-Agent", $"{userAgent}")
                 .PostJsonAsync(payload);
 
         }
 
-        public async Task SendTypingAsync(string accessToken, string channelId, string serverId)
+        public async Task SendTypingAsync(string accessToken, string userAgent, string channelId, string serverId)
         {
             string url = $"{_discordSettings.BaseUrl}/{channelId}/typing";
 
@@ -68,7 +58,7 @@ namespace GrindSoft.Services
                 .WithHeaders(_headers)
                 .WithHeader("Authorization", $"{accessToken}") 
                 .WithHeader("Referer", $"https://discord.com/channels/{serverId}/{channelId}")
-                .WithHeader("User-Agent", GetRandomUserAgent())
+                .WithHeader("User-Agent", $"{userAgent}")
                 .PostAsync();
 
             Random random = new();
@@ -84,13 +74,6 @@ namespace GrindSoft.Services
             long unixTimeMilliseconds = (long)ts.TotalMilliseconds;
 
             return ((unixTimeMilliseconds * 1000) - 1420070400000 + 4194304).ToString();
-        }
-
-        private string GetRandomUserAgent()
-        {
-            Random random = new();
-            int index = random.Next(_userAgents.Count);
-            return _userAgents[index];
         }
     }
 }

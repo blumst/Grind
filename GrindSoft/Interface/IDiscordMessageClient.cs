@@ -2,8 +2,8 @@
 {
     public interface IDiscordMessageClient
     {
-        public Task SendMessageAsync(string accessToken, string channelId, string message, string serverId);
+        public Task SendMessageAsync(string accessToken, string userAgent, string channelId, string message, string serverId);
 
-        public Task SendTypingAsync(string accessToken, string channelId, string serverId);
+        public Task SendTypingAsync(string accessToken, string userAgent, string channelId, string serverId);
     }
 }
