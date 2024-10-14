@@ -1,6 +1,5 @@
 ﻿using Flurl.Http;
 using GrindSoft.Interface;
-using GrindSoft.Settings;
 using Microsoft.Extensions.Options;
 
 namespace GrindSoft.Services
