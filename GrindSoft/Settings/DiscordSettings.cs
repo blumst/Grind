@@ -1,4 +1,4 @@
-﻿namespace GrindSoft
+﻿namespace GrindSoft.Settings
 {
     public class DiscordSettings
     {

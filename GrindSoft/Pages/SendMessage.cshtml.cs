@@ -1,13 +1,15 @@
 using GrindSoft.Interface;
+using GrindSoft.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 
 namespace GrindSoft.Pages
 {
-    public class SendMessageModel(IDiscordMessageClient discordMessageClient) : PageModel
+    public class SendMessageModel(IDiscordMessageClient discordMessageClient, IChatGPTClient chatGPTClient) : PageModel
     {
         private readonly IDiscordMessageClient _discordMessageClient = discordMessageClient;
+        private readonly IChatGPTClient _chatGPTClient = chatGPTClient;
 
         [BindProperty]
         public string AccessToken { get; set; }
@@ -19,10 +21,13 @@ namespace GrindSoft.Pages
         public string? ServerId { get; set; }
 
         [BindProperty]
-        public string ChannelId { get; set; } 
+        public string ChannelId { get; set; }
 
         [BindProperty]
-        public string Message { get; set; }
+        public string Prompt { get; set; }
+
+        //[BindProperty]
+        //public string Message { get; set; }
 
         public string? Response { get; set; }
 
@@ -41,7 +46,12 @@ namespace GrindSoft.Pages
 
             try
             {
-                await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, Message, ServerId);
+                //await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, Message, ServerId);
+                //Response = "Message successfully sent.";
+
+                string gptResponse = await _chatGPTClient.SendMessageAsync(Prompt);
+
+                await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, gptResponse, ServerId);
                 Response = "Message successfully sent.";
             }
             catch (Exception ex)
