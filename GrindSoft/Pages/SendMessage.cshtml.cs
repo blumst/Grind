@@ -3,13 +3,20 @@ using GrindSoft.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-
 namespace GrindSoft.Pages
 {
-    public class SendMessageModel(IDiscordMessageClient discordMessageClient, IChatGPTClient chatGPTClient) : PageModel
+    public class SendMessageModel : PageModel
     {
-        private readonly IDiscordMessageClient _discordMessageClient = discordMessageClient;
-        private readonly IChatGPTClient _chatGPTClient = chatGPTClient;
+        private readonly IDiscordMessageClient _discordMessageClient;
+        private readonly IChatGPTClient _chatGPTClient;
+        private readonly DiscordService _discordService;
+
+        public SendMessageModel(IDiscordMessageClient discordMessageClient, IChatGPTClient chatGPTClient)
+        {
+            _discordMessageClient = discordMessageClient;
+            _chatGPTClient = chatGPTClient;
+            _discordService = new DiscordService(discordMessageClient, chatGPTClient);
+        }
 
         [BindProperty]
         public string AccessToken { get; set; }
@@ -25,9 +32,6 @@ namespace GrindSoft.Pages
 
         [BindProperty]
         public string Prompt { get; set; }
-
-        //[BindProperty]
-        //public string Message { get; set; }
 
         public string? Response { get; set; }
 
@@ -46,19 +50,19 @@ namespace GrindSoft.Pages
 
             try
             {
-                //await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, Message, ServerId);
-                //Response = "Message successfully sent.";
-
+                _discordService.UpdateData(AccessToken, ChannelId, ServerId, UserAgent);
                 string gptResponse = await _chatGPTClient.SendMessageAsync(Prompt);
-
                 await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, gptResponse, ServerId);
                 Response = "Message successfully sent.";
+
+                await _discordService.FetchUserIdAsync();
             }
             catch (Exception ex)
             {
                 Response = $"Failed to send message: {ex.Message}";
             }
 
+            _discordService.StartMonitoring();
             return Page();
         }
     }

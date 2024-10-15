@@ -7,20 +7,15 @@ using Flurl.Http;
 
 namespace GrindSoft.Services
 {
-    public class ChatGPTClient : IChatGPTClient
+    public class ChatGPTClient(IOptions<ChatGptSettings> chatGptSettings) : IChatGPTClient
     {
-        private readonly ChatGptSettings _chatGptSettings;
-        private readonly string _apiKey;
-        private readonly string _apiUrl;
-
-        public ChatGPTClient(IOptions<ChatGptSettings> chatGptSettings)
-        {
-            _chatGptSettings = chatGptSettings.Value;
-            _apiKey = _chatGptSettings.ApiKey;
-            _apiUrl = _chatGptSettings.ApiUrl;
-        }
-
+        private readonly ChatGptSettings _chatGptSettings = chatGptSettings.Value;
         private readonly List<Dictionary<string, string>> _messages = [];
+
+        private const string SystemRole = "system";
+        private const string UserRole = "user";
+        private const string AssistantRole = "assistant";
+        private const string ModelName = "gpt-4o-mini";
 
 
         public async Task<string> SendMessageAsync(string prompt)
@@ -29,7 +24,7 @@ namespace GrindSoft.Services
             {
                 _messages.Add(new Dictionary<string, string>
                 {
-                    { "role", "system" },
+                    { "role", SystemRole },
                     { "content", prompt }
                 });
             }
@@ -37,22 +32,22 @@ namespace GrindSoft.Services
             {
                 _messages.Add(new Dictionary<string, string>
                 {
-                    { "role", "user" },
+                    { "role", UserRole },
                     { "content", prompt }
                 });
             }
 
             var requestBody = new
             {
-                model = "gpt-4o-mini",
+                model = ModelName,
                 messages = _messages
             };
 
             try
             {
-                var responseString = await _apiUrl
-                    .WithOAuthBearerToken(_apiKey)
-                    .WithHeader("Content_Type", "application/json")
+                var responseString = await _chatGptSettings.ApiUrl
+                    .WithOAuthBearerToken(_chatGptSettings.ApiKey)
+                    .WithHeader("Content-Type", "application/json")
                     .PostJsonAsync(requestBody)
                     .ReceiveString();
 
@@ -68,7 +63,7 @@ namespace GrindSoft.Services
 
                     _messages.Add(new Dictionary<string, string>
                     {
-                        { "role", "assistant" },
+                        { "role", AssistantRole },
                         { "content", contentResponse }
                     });
 
