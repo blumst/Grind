@@ -1,4 +1,4 @@
-using GrindSoft.Interface;
+using GrindSoft.Models;
 using GrindSoft.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,15 +7,11 @@ namespace GrindSoft.Pages
 {
     public class SendMessageModel : PageModel
     {
-        private readonly IDiscordMessageClient _discordMessageClient;
-        private readonly IChatGPTClient _chatGPTClient;
-        private readonly DiscordService _discordService;
+        private readonly SessionManager _sessionManager;
 
-        public SendMessageModel(IDiscordMessageClient discordMessageClient, IChatGPTClient chatGPTClient)
+        public SendMessageModel(SessionManager sessionManager)
         {
-            _discordMessageClient = discordMessageClient;
-            _chatGPTClient = chatGPTClient;
-            _discordService = new DiscordService(discordMessageClient, chatGPTClient);
+            _sessionManager = sessionManager;
         }
 
         [BindProperty]
@@ -37,7 +33,7 @@ namespace GrindSoft.Pages
 
         public void OnGet()
         {
-            
+
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -48,21 +44,19 @@ namespace GrindSoft.Pages
                 return Page();
             }
 
-            try
-            {
-                _discordService.UpdateData(AccessToken, ChannelId, ServerId, UserAgent);
-                string gptResponse = await _chatGPTClient.SendMessageAsync(Prompt);
-                await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, gptResponse, ServerId);
-                Response = "Message successfully sent.";
+                var session = new Session
+                {
+                    AccessToken = AccessToken,
+                    UserAgent = UserAgent,
+                    ServerId = ServerId ?? "@me",
+                    ChannelId = ChannelId,
+                    Prompt = Prompt,
+                    Status = "In Progress"
+                };
 
-                await _discordService.FetchUserIdAsync();
-            }
-            catch (Exception ex)
-            {
-                Response = $"Failed to send message: {ex.Message}";
-            }
+            _sessionManager.AddSession(session);
 
-            _discordService.StartMonitoring();
+            Response = "Session started and is in progress.";
             return Page();
         }
     }
