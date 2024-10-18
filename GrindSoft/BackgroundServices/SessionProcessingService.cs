@@ -4,16 +4,10 @@ using GrindSoft.Services;
 
 namespace GrindSoft.BackgroundServices
 {
-    public class SessionProcessingService : BackgroundService
+    public class SessionProcessingService(SessionManager sessionManager, IServiceProvider serviceProvider) : BackgroundService
     {
-        private readonly SessionManager _sessionManager;
-        private readonly IServiceProvider _serviceProvider;
-
-        public SessionProcessingService(SessionManager sessionManager, IServiceProvider serviceProvider)
-        {
-            _sessionManager = sessionManager;
-            _serviceProvider = serviceProvider;
-        }
+        private readonly SessionManager _sessionManager = sessionManager;
+        private readonly IServiceProvider _serviceProvider = serviceProvider;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -43,17 +37,13 @@ namespace GrindSoft.BackgroundServices
             {
                 using var scope = _serviceProvider.CreateScope();
 
-                // Получаем экземпляр IDiscordClient
                 var discordClient = scope.ServiceProvider.GetRequiredService<IDiscordClient>();
                 var chatGPTClient = scope.ServiceProvider.GetRequiredService<IChatGPTClient>();
 
-                // Обновляем данные сессии в discordClient
                 discordClient.UpdateData(session.AccessToken, session.ChannelId, session.ServerId, session.UserAgent);
 
-                // Получаем идентификатор пользователя
                 await discordClient.FetchUserIdAsync();
 
-                // Отправляем начальное сообщение
                 var gptResponse = await chatGPTClient.SendMessageAsync(session.Prompt);
                 await discordClient.SendMessageAsync(gptResponse);
 
