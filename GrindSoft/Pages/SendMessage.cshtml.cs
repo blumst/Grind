@@ -1,13 +1,18 @@
-using GrindSoft.Interface;
+using GrindSoft.Models;
+using GrindSoft.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-
 namespace GrindSoft.Pages
 {
-    public class SendMessageModel(IDiscordMessageClient discordMessageClient) : PageModel
+    public class SendMessageModel : PageModel
     {
-        private readonly IDiscordMessageClient _discordMessageClient = discordMessageClient;
+        private readonly SessionManager _sessionManager;
+
+        public SendMessageModel(SessionManager sessionManager)
+        {
+            _sessionManager = sessionManager;
+        }
 
         [BindProperty]
         public string AccessToken { get; set; }
@@ -19,16 +24,16 @@ namespace GrindSoft.Pages
         public string? ServerId { get; set; }
 
         [BindProperty]
-        public string ChannelId { get; set; } 
+        public string ChannelId { get; set; }
 
         [BindProperty]
-        public string Message { get; set; }
+        public string Prompt { get; set; }
 
         public string? Response { get; set; }
 
         public void OnGet()
         {
-            
+
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -39,16 +44,19 @@ namespace GrindSoft.Pages
                 return Page();
             }
 
-            try
-            {
-                await _discordMessageClient.SendMessageAsync(AccessToken, UserAgent, ChannelId, Message, ServerId);
-                Response = "Message successfully sent.";
-            }
-            catch (Exception ex)
-            {
-                Response = $"Failed to send message: {ex.Message}";
-            }
+                var session = new Session
+                {
+                    AccessToken = AccessToken,
+                    UserAgent = UserAgent,
+                    ServerId = ServerId ?? "@me",
+                    ChannelId = ChannelId,
+                    Prompt = Prompt,
+                    Status = "In Progress"
+                };
 
+            _sessionManager.AddSession(session);
+
+            Response = "Session started and is in progress.";
             return Page();
         }
     }

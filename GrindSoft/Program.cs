@@ -1,6 +1,8 @@
 
+using GrindSoft.BackgroundServices;
 using GrindSoft.Interface;
 using GrindSoft.Services;
+using GrindSoft.Settings;
 
 namespace GrindSoft
 {
@@ -10,12 +12,16 @@ namespace GrindSoft
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("DiscordSettings"));
+            builder.Services.Configure<ChatGptSettings>(builder.Configuration.GetSection("ChatGptSettings"));
 
             builder.Services.AddRazorPages();
 
-            builder.Services.AddScoped<IDiscordMessageClient, DiscordMessageClient>();
+            builder.Services.AddScoped<IDiscordClient, DiscordClient>();
+            builder.Services.AddScoped<IChatGPTClient, ChatGPTClient>();
+            builder.Services.AddSingleton<SessionManager>();
+
+            builder.Services.AddHostedService<SessionProcessingService>();
 
             var app = builder.Build();
 
