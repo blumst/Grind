@@ -8,10 +8,12 @@ namespace GrindSoft.Pages
     public class SendMessageModel : PageModel
     {
         private readonly SessionManager _sessionManager;
+        private readonly AppDbContext _dbContext;
 
-        public SendMessageModel(SessionManager sessionManager)
+        public SendMessageModel(SessionManager sessionManager, AppDbContext dbContext)
         {
             _sessionManager = sessionManager;
+            _dbContext = dbContext; 
         }
 
         [BindProperty]

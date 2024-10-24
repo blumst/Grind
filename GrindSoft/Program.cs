@@ -1,8 +1,10 @@
 
 using GrindSoft.BackgroundServices;
 using GrindSoft.Interface;
+using GrindSoft.Models;
 using GrindSoft.Services;
 using GrindSoft.Settings;
+using Microsoft.EntityFrameworkCore;
 
 namespace GrindSoft
 {
@@ -22,6 +24,9 @@ namespace GrindSoft
             builder.Services.AddSingleton<SessionManager>();
 
             builder.Services.AddHostedService<SessionProcessingService>();
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
@@ -44,6 +49,12 @@ namespace GrindSoft
             app.UseAuthorization();
 
             app.MapRazorPages();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Database.MigrateAsync();
+            }
 
             app.Run();
         }

@@ -1,5 +1,3 @@
-version: '3.8'  
-
 services:
   webapp:
     image: vayaros/grindsoft:latest
@@ -7,9 +5,16 @@ services:
       - "8081:8080"  
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
+    volumes:
+      - ./data:/app/data
     networks:
       - app-network  
 
 networks:
   app-network:
     driver: bridge 
+
+volumes:
+  sqlite-data:
+    driver: local
+
