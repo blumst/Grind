@@ -3,7 +3,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Options;
 using GrindSoft.Interface;
-using GrindSoft.Settings; 
+using GrindSoft.Settings;
+using GrindSoft.Models;
 
 namespace GrindSoft.Services
 {
@@ -95,8 +96,11 @@ namespace GrindSoft.Services
             await Task.Delay(delay);
         }
 
-        public async Task<List<(string AuthorId, string Content, string MessageId)>> GetLatestMessagesAsync() 
-            => await GetMessageHistory(_sessionContext.AccessToken, _sessionContext.ChannelId);
+        public async Task<List<(string AuthorId, string Content, string MessageId)>> GetLatestMessagesAsync()
+        {
+            var messages = await GetMessageHistory(_sessionContext.AccessToken, _sessionContext.ChannelId);
+            return [.. messages];
+        }
 
         private static string GenerateNonce() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 

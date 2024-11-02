@@ -39,39 +39,17 @@
                 <label for="Prompt" class="form-label">Prompt</label>
                 <textarea class="form-control" id="Prompt" name="Prompt" rows="4" required>@Model.Prompt</textarea>
             </div>
-            @* <div class="mb-3">
-                <label for="Message" class="form-label">Message</label>
-                <textarea class="form-control" id="Message" name="Message" rows="4" required>@Model.Message</textarea>
-            </div> *@
-
-            @* <button class="btn btn-secondary" type="button" id="toggleGPT">Show GPT Options</button>
-
-            <div id="gpt-options" style="display:none;">
-                <div class="mb-3">
-                    <label for="GPTPrompt" class="form-label">GPT Prompt</label>
-                    <textarea class="form-control" id="GPTPrompt" name="GPTPrompt" rows="3"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label for="GPTContext" class="form-label">GPT Context</label>
-                    <textarea class="form-control" id="GPTContext" name="GPTContext" rows="3"></textarea>
-                </div>
-            </div> *@
+            <div class="mb-3">
+                <label for="MessageCount" class="form-label">Number of Messages</label>
+                <input type="number" class="form-control" id="MessageCount" name="MessageCount" value="@Model.MessageCount" min="1" step="1" required />
+            </div>
+            <div class="mb-3">
+                <label for="DelayBetweenMessages" class="form-label">Delay Between Messages (seconds)</label>
+                <input type="number" class="form-control" id="DelayBetweenMessages" name="DelayBetweenMessages" value="@Model.DelayBetweenMessages" min="1" step="1" required />
+            </div>
 
             <button type="submit" class="btn btn-primary">Send</button>
         </form>
-
-        @* <script>
-            document.getElementById('toggleGPT').addEventListener('click', function () {
-                var gptOptions = document.getElementById('gpt-options');
-                if (gptOptions.style.display === 'none') {
-                    gptOptions.style.display = 'block';
-                    this.textContent = 'Hide GPT Options';
-                } else {
-                    gptOptions.style.display = 'none';
-                    this.textContent = 'Show GPT Options';
-                }
-            });
-           </script> *@
 
         @if (!string.IsNullOrEmpty(Model.Response))
         {

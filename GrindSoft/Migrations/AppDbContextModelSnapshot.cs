@@ -55,12 +55,23 @@ namespace GrindSoft.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ChannelId")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("DelayBetweenMessages")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastProcessedMessageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MessageCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MessagesSentByBot")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Prompt")
                         .IsRequired()

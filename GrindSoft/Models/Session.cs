@@ -10,6 +10,10 @@
         public string Prompt { get; set; }
         public string Status { get; set; }
         public List<Message> Messages { get; set; } = new List<Message>();
-        public string? AuthorId { get; set; } 
+        public string? AuthorId { get; set; }
+        public int MessageCount { get; set; }
+        public int DelayBetweenMessages { get; set; }
+        public string? LastProcessedMessageId { get; set; } = "0";
+        public int MessagesSentByBot { get; set; } = -1;
     }
 }

@@ -477,3 +477,6 @@ $RECYCLE.BIN/
 *.lnk
 GrindSoft/appsettings.json
 GrindSoft/data/
+*.db
+*.db-shm
+*.db-wal

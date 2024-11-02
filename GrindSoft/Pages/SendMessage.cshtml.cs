@@ -2,6 +2,7 @@ using GrindSoft.Models;
 using GrindSoft.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 
 namespace GrindSoft.Pages
 {
@@ -31,6 +32,12 @@ namespace GrindSoft.Pages
         [BindProperty]
         public string Prompt { get; set; }
 
+        [BindProperty]
+        public int MessageCount { get; set; }
+
+        [BindProperty]
+        public int DelayBetweenMessages { get; set; }
+
         public string? Response { get; set; }
 
         public void OnGet()
@@ -53,7 +60,9 @@ namespace GrindSoft.Pages
                     ServerId = ServerId ?? "@me",
                     ChannelId = ChannelId,
                     Prompt = Prompt,
-                    Status = "In Progress"
+                    Status = "In Progress",
+                    MessageCount = MessageCount,
+                    DelayBetweenMessages = DelayBetweenMessages
                 };
 
             _sessionManager.AddSession(session);

@@ -1,4 +1,4 @@
-﻿using GrindSoft.Services;
+﻿using GrindSoft.Models;
 
 namespace GrindSoft.Interface
 {
