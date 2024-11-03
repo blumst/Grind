@@ -96,10 +96,15 @@ namespace GrindSoft.Services
             await Task.Delay(delay);
         }
 
-        public async Task<List<(string AuthorId, string Content, string MessageId)>> GetLatestMessagesAsync()
+        public async Task<List<MessageRecord>> GetLatestMessagesAsync()
         {
             var messages = await GetMessageHistory(_sessionContext.AccessToken, _sessionContext.ChannelId);
-            return [.. messages];
+            
+            return messages.Select(message => new MessageRecord(
+                AuthorId: message.AuthorId,
+                Content: message.Content,
+                MessageId: message.MessageId
+            )).ToList();
         }
 
         private static string GenerateNonce() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
@@ -122,10 +127,10 @@ namespace GrindSoft.Services
             }
         }
 
-        private static List<(string AuthorId, string Content, string MessageId)> ParseJson(string jsonResponse)
+        private static List<MessageRecord> ParseJson(string jsonResponse)
         {
             JArray messages = JArray.Parse(jsonResponse);
-            var messagesList = new List<(string, string, string)>();
+            var messagesList = new List<MessageRecord>();
 
             foreach (var message in messages)
             {
@@ -133,21 +138,19 @@ namespace GrindSoft.Services
                 string authorId = message["author"]["id"].ToString();
                 string messageId = message["id"].ToString();
 
-                messagesList.Add((authorId, content, messageId));
+                messagesList.Add(new MessageRecord(authorId, content, messageId));
             }
 
             return messagesList;
         }
 
-        private async Task<List<(string AuthorId, string Content, string MessageId)>> GetMessageHistory(string token, string channelId)
+        private async Task<List<MessageRecord>> GetMessageHistory(string token, string channelId)
         {
             string accountUrl = $"{_discordSettings.BaseUrl}/{channelId}/messages";
             string pageContent = await DownloadAccountPageAsync(accountUrl, token);
 
             if (pageContent != null)
-            {
                 return ParseJson(pageContent);
-            }
             else
             {
                 Console.WriteLine("Unable to retrieve page content.");

@@ -6,7 +6,7 @@ namespace GrindSoft.Interface
     {
         void UpdateData(SessionContext sessionContext);
         Task<string> FetchUserIdAsync();
-        Task<List<(string AuthorId, string Content, string MessageId)>> GetLatestMessagesAsync();
+        Task<List<MessageRecord>> GetLatestMessagesAsync();
         Task SendMessageAsync(string message);
         Task SendTypingAsync();
     }
