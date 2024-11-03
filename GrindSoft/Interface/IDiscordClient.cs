@@ -1,12 +1,12 @@
-﻿namespace GrindSoft.Interface
+﻿using GrindSoft.Models;
+
+namespace GrindSoft.Interface
 {
     public interface IDiscordClient
     {
-        string AuthorId { get; }
-
-        void UpdateData(string accessToken, string channelId, string serverId, string userAgent);
-        Task FetchUserIdAsync();
-        Task<List<(string AuthorId, string Content, string MessageId)>> GetLatestMessagesAsync();
+        void UpdateData(SessionContext sessionContext);
+        Task<string> FetchUserIdAsync();
+        Task<List<MessageRecord>> GetLatestMessagesAsync();
         Task SendMessageAsync(string message);
         Task SendTypingAsync();
     }

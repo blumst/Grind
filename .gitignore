@@ -476,3 +476,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 GrindSoft/appsettings.json
+GrindSoft/data/
+*.db
+*.db-shm
+*.db-wal

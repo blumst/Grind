@@ -12,7 +12,6 @@ namespace GrindSoft.Services
         private readonly ChatGptSettings _chatGptSettings = chatGptSettings.Value;
         private readonly List<Dictionary<string, string>> _messages = [];
 
-        private const string SystemRole = "system";
         private const string UserRole = "user";
         private const string AssistantRole = "assistant";
         private const string ModelName = "gpt-4o-mini";
@@ -20,22 +19,12 @@ namespace GrindSoft.Services
 
         public async Task<string> SendMessageAsync(string prompt)
         {
-            if (_messages.Count == 0)
-            {
-                _messages.Add(new Dictionary<string, string>
-                {
-                    { "role", SystemRole },
-                    { "content", prompt }
-                });
-            }
-            else
-            {
                 _messages.Add(new Dictionary<string, string>
                 {
                     { "role", UserRole },
                     { "content", prompt }
                 });
-            }
+  
 
             var requestBody = new
             {

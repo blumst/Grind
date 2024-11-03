@@ -3,21 +3,16 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Options;
 using GrindSoft.Interface;
-using GrindSoft.Settings; 
+using GrindSoft.Settings;
+using GrindSoft.Models;
 
 namespace GrindSoft.Services
 {
     public class DiscordClient : IDiscordClient
     {
         private readonly DiscordSettings _discordSettings;
-
         private readonly Dictionary<string, string> _headers;
-
-        public string AuthorId { get; private set; }
-        private string _accessToken;
-        private string _channelId;
-        private string _userAgent;
-        private string _serverId;
+        private SessionContext _sessionContext;
 
         public DiscordClient(IOptions<DiscordSettings> discordSettings)
         {
@@ -41,35 +36,32 @@ namespace GrindSoft.Services
             };
         }
 
-        public void UpdateData(string accessToken, string channelId, string serverId, string userAgent)
-        {
-            _accessToken = accessToken;
-            _channelId = channelId;
-            _serverId = serverId;
-            _userAgent = userAgent;
-        }
+        public void UpdateData(SessionContext sessionContext) => _sessionContext = sessionContext;
 
-        public async Task FetchUserIdAsync()
+        public async Task<string> FetchUserIdAsync()
         {
             try
             {
                 var userInfoUrl = "https://discord.com/api/v9/users/@me";
                 var response = await userInfoUrl
-                    .WithHeader("Authorization", _accessToken)
+                    .WithHeader("Authorization", _sessionContext.AccessToken)
                     .GetStringAsync();
 
                 var jsonResponse = JsonConvert.DeserializeObject<JObject>(response);
-                AuthorId = jsonResponse["id"].ToString();
+                var authorId = jsonResponse["id"].ToString();
+
+                return authorId;
             }
             catch (FlurlHttpException ex)
             {
-                Console.WriteLine($"Не вдалося отримати ідентифікатор користувача: {ex.Message}");
+                Console.WriteLine($"НFailed to retrieve user ID: {ex.Message}");
+                return null;
             }
         }
 
         public async Task SendMessageAsync(string message)
         {
-            string url = $"{_discordSettings.BaseUrl}/{_channelId}/messages";
+            string url = $"{_discordSettings.BaseUrl}/{_sessionContext.ChannelId}/messages";
 
             var payload = new
             {
@@ -80,25 +72,23 @@ namespace GrindSoft.Services
                 flags = 0
             };
 
-            _ = SendTypingAsync();
-
             await url
                 .WithHeaders(_headers)
-                .WithHeader("Authorization", _accessToken)
-                .WithHeader("Referer", $"https://discord.com/channels/{_serverId}/{_channelId}")
-                .WithHeader("User-Agent", _userAgent)
+                .WithHeader("Authorization", _sessionContext.AccessToken)
+                .WithHeader("Referer", $"https://discord.com/channels/{_sessionContext.ServerId}/{_sessionContext.ChannelId}")
+                .WithHeader("User-Agent", _sessionContext.UserAgent)
                 .PostJsonAsync(payload);
         }
 
         public async Task SendTypingAsync()
         {
-            string url = $"{_discordSettings.BaseUrl}/{_channelId}/typing";
+            string url = $"{_discordSettings.BaseUrl}/{_sessionContext.ChannelId}/typing";
 
             await url
                 .WithHeaders(_headers)
-                .WithHeader("Authorization", _accessToken)
-                .WithHeader("Referer", $"https://discord.com/channels/{_serverId}/{_channelId}")
-                .WithHeader("User-Agent", _userAgent)
+                .WithHeader("Authorization", _sessionContext.AccessToken)
+                .WithHeader("Referer", $"https://discord.com/channels/{_sessionContext.ServerId}/{_sessionContext.ChannelId}")
+                .WithHeader("User-Agent", _sessionContext.UserAgent)
                 .PostAsync();
 
             Random random = new();
@@ -106,18 +96,20 @@ namespace GrindSoft.Services
             await Task.Delay(delay);
         }
 
-        public async Task<List<(string AuthorId, string Content, string MessageId)>> GetLatestMessagesAsync()
+        public async Task<List<MessageRecord>> GetLatestMessagesAsync()
         {
-            var messages = await GetMessageHistory(_accessToken, _channelId);
-            return messages;
+            var messages = await GetMessageHistory(_sessionContext.AccessToken, _sessionContext.ChannelId);
+            
+            return messages.Select(message => new MessageRecord(
+                AuthorId: message.AuthorId,
+                Content: message.Content,
+                MessageId: message.MessageId
+            )).ToList();
         }
 
-        private static string GenerateNonce()
-        {
-            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-        }
+        private static string GenerateNonce() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
- 
+
         private static async Task<string> DownloadAccountPageAsync(string url, string authToken)
         {
             try
@@ -135,10 +127,10 @@ namespace GrindSoft.Services
             }
         }
 
-        private static List<(string AuthorId, string Content, string MessageId)> ParseJson(string jsonResponse)
+        private static List<MessageRecord> ParseJson(string jsonResponse)
         {
             JArray messages = JArray.Parse(jsonResponse);
-            var messagesList = new List<(string, string, string)>();
+            var messagesList = new List<MessageRecord>();
 
             foreach (var message in messages)
             {
@@ -146,21 +138,19 @@ namespace GrindSoft.Services
                 string authorId = message["author"]["id"].ToString();
                 string messageId = message["id"].ToString();
 
-                messagesList.Add((authorId, content, messageId));
+                messagesList.Add(new MessageRecord(authorId, content, messageId));
             }
 
             return messagesList;
         }
 
-        private async Task<List<(string AuthorId, string Content, string MessageId)>> GetMessageHistory(string token, string channelId)
+        private async Task<List<MessageRecord>> GetMessageHistory(string token, string channelId)
         {
             string accountUrl = $"{_discordSettings.BaseUrl}/{channelId}/messages";
             string pageContent = await DownloadAccountPageAsync(accountUrl, token);
 
             if (pageContent != null)
-            {
                 return ParseJson(pageContent);
-            }
             else
             {
                 Console.WriteLine("Unable to retrieve page content.");
