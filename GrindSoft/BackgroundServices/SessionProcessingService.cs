@@ -10,8 +10,8 @@ namespace GrindSoft.BackgroundServices
         private readonly IServiceProvider _serviceProvider = serviceProvider;
 
         private const string ContinuationPrompt =
-            "Imagine that you wrote a previous message, but no one replied to you. Continue the conversation in the same context, keeping the topic, language, and style the same." +
-            "Make your new message a logical continuation of the previous message by adding additional details or expanding on the idea.";
+            "Imagine that you wrote this previous message, but no one replied to you. Continue the conversation in the same context, keeping the topic, language, and style the same." +
+            "Make your new message a logical continuation of your previous message by adding additional details or expanding on the idea.";
         
         private string lastBotMessage = string.Empty;
 
@@ -91,7 +91,7 @@ namespace GrindSoft.BackgroundServices
 
                                 Task.Run(() => discordClient.SendTypingAsync(), stoppingToken);
                                 var response = await chatGPTClient.SendMessageAsync(Content);
-                                await discordClient.SendMessageAsync(response);
+                                await discordClient.SendMessageAsync(response, MessageId);
 
                                 lastBotMessage = response;
 
@@ -123,7 +123,7 @@ namespace GrindSoft.BackgroundServices
 
                     if (timeSinceLastUserMessage >= waitForAnswerTime && session.MessagesSentByBot < session.MessageCount) 
                     {
-                        string prompt = session.MessagesSentByBot == -1 ? session.Prompt : $"{lastBotMessage}\n{ContinuationPrompt}";
+                        string prompt = session.MessagesSentByBot == -1 ? session.Prompt : $"Your message: \"{lastBotMessage}\"\n{ContinuationPrompt}";
 
                         await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, prompt, stoppingToken);
                         session.MessagesSentByBot++;

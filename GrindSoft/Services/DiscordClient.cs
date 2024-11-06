@@ -59,7 +59,7 @@ namespace GrindSoft.Services
             }
         }
 
-        public async Task SendMessageAsync(string message)
+        public async Task SendMessageAsync(string message, string replyToMessageId = null)
         {
             string url = $"{_discordSettings.BaseUrl}/{_sessionContext.ChannelId}/messages";
 
@@ -69,7 +69,12 @@ namespace GrindSoft.Services
                 content = message,
                 nonce = GenerateNonce(),
                 tts = false,
-                flags = 0
+                flags = 0,
+                message_reference = replyToMessageId == null ? null : new
+                {
+                    channel_id = _sessionContext.ChannelId,
+                    message_id = replyToMessageId
+                }
             };
 
             await url
