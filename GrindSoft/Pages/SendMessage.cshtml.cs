@@ -38,6 +38,12 @@ namespace GrindSoft.Pages
         [BindProperty]
         public int DelayBetweenMessages { get; set; }
 
+        [BindProperty]
+        public int ModeType { get; set; }
+
+        [BindProperty]
+        public string TargetUserId { get; set; }
+
         public string? Response { get; set; }
 
         public void OnGet()
@@ -47,6 +53,12 @@ namespace GrindSoft.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
+            if (ModeType == 2 && string.IsNullOrWhiteSpace(TargetUserId))
+                ModelState.AddModelError("TargetUserId", "TargetUserId is required for Mode 2.");
+            
+            if (ModeType == 1)
+                ModelState.Remove("TargetUserId");
+            
             if (!ModelState.IsValid)
             {
                 Response = "Please fill in all required fields.";
@@ -62,7 +74,9 @@ namespace GrindSoft.Pages
                     Prompt = Prompt,
                     Status = "In Progress",
                     MessageCount = MessageCount,
-                    DelayBetweenMessages = DelayBetweenMessages
+                    DelayBetweenMessages = DelayBetweenMessages,
+                    ModeType = ModeType,
+                    TargetUserId = ModeType == 2 ? TargetUserId : ""
                 };
 
             _sessionManager.AddSession(session);

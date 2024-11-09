@@ -15,5 +15,7 @@
         public int DelayBetweenMessages { get; set; }
         public string? LastProcessedMessageId { get; set; } = "0";
         public int MessagesSentByBot { get; set; } = -1;
+        public int ModeType { get; set; }
+        public string TargetUserId { get; set; }
     }
 }

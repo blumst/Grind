@@ -73,6 +73,9 @@ namespace GrindSoft.Migrations
                     b.Property<int>("MessagesSentByBot")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ModeType")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Prompt")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -82,6 +85,10 @@ namespace GrindSoft.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetUserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

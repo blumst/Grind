@@ -17,20 +17,23 @@ namespace GrindSoft.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            Task.Run(async() =>
             {
-                try
+                while (!stoppingToken.IsCancellationRequested)
                 {
-                    if (_sessionManager.TryGetNextSession(out var session))
-                        await ProcessSessionAsync(session, stoppingToken);
-                    else
-                        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    try
+                    {
+                        if (_sessionManager.TryGetNextSession(out var session))
+                            await ProcessSessionAsync(session, stoppingToken);
+                        else
+                            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"An error occurred in the main loop: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An error occurred in the main loop: {ex.Message}");
-                }
-            }
+            }, stoppingToken);
         }
 
         private async Task ProcessSessionAsync(Session session, CancellationToken stoppingToken)
@@ -68,7 +71,8 @@ namespace GrindSoft.BackgroundServices
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 var lastMessageTime = DateTime.UtcNow;
-                var waitForAnswerTime = TimeSpan.FromSeconds(10);
+                //var waitForAnswerTime = TimeSpan.FromSeconds(session.ModeType == 1 ? 30 : session.DelayBetweenMessages);
+                var random = new Random();
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
@@ -87,52 +91,50 @@ namespace GrindSoft.BackgroundServices
                             {
                                 session.MessagesSentByBot = 0;
                                 lastMessageTime = DateTime.UtcNow;
-                                waitForAnswerTime = TimeSpan.FromSeconds(10);
 
-                                Task.Run(() => discordClient.SendTypingAsync(), stoppingToken);
-                                var response = await chatGPTClient.SendMessageAsync(Content);
-                                await discordClient.SendMessageAsync(response, MessageId);
-
-                                lastBotMessage = response;
-
-                                session.Messages.Add(new Message
+                                if (session.ModeType == 2)
                                 {
-                                    AuthorId = AuthorId,
-                                    Content = Content,
-                                    DateTime = DateTime.UtcNow,
-                                    SessionId = session.Id
-                                });
+                                    bool isTargetUser = new Random().Next(0, 101) <= 90;
 
-                                session.Messages.Add(new Message
-                                {
-                                    AuthorId = session.AuthorId,
-                                    Content = response,
-                                    DateTime = DateTime.UtcNow,
-                                    SessionId = session.Id
-                                });
+                                    string targetAuthorId = isTargetUser ? session.TargetUserId : messages[new Random().Next(0, messages.Count)].AuthorId;
 
-                                dbContext.Sessions.Update(session);
-                                await dbContext.SaveChangesAsync(stoppingToken);
+                                    if (targetAuthorId == null || targetAuthorId != AuthorId) continue;
 
-                                session.LastProcessedMessageId = MessageId;
+                                    await ProcessAndSendResponseAsync(session, discordClient, chatGPTClient, dbContext, Content, MessageId, AuthorId, stoppingToken);
+                                }
+                                else
+                                    await ProcessAndSendResponseAsync(session, discordClient, chatGPTClient, dbContext, Content, MessageId, AuthorId, stoppingToken);
                             }
                         }
                     }
 
                     var timeSinceLastUserMessage = DateTime.UtcNow - lastMessageTime;
 
-                    if (timeSinceLastUserMessage >= waitForAnswerTime && session.MessagesSentByBot < session.MessageCount) 
+                    if (session.ModeType == 2 && timeSinceLastUserMessage.TotalSeconds >= random.Next(15, 31))
                     {
-                        string prompt = session.MessagesSentByBot == -1 ? session.Prompt : $"Your message: \"{lastBotMessage}\"\n{ContinuationPrompt}";
+                        if (session.MessagesSentByBot < session.MessageCount)
+                        {
+                            string prompt = session.MessagesSentByBot == -1
+                                ? session.Prompt
+                                : $"Just checking in, feel free to continue the conversation!";
+
+                            await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, prompt, stoppingToken);
+                            session.MessagesSentByBot++;
+                            lastMessageTime = DateTime.UtcNow;
+                        }
+                    }
+                    else if (session.ModeType == 1 && timeSinceLastUserMessage >= TimeSpan.FromSeconds(30))
+                    {
+                        string prompt = session.MessagesSentByBot == -1
+                            ? session.Prompt
+                            : $"Your message: \"{lastBotMessage}\"\n{ContinuationPrompt}";
 
                         await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, prompt, stoppingToken);
                         session.MessagesSentByBot++;
                         lastMessageTime = DateTime.UtcNow;
-
-                        waitForAnswerTime = TimeSpan.FromSeconds(30);
                     }
-                    else
-                        await Task.Delay(TimeSpan.FromSeconds(session.DelayBetweenMessages), stoppingToken);
+
+                    await Task.Delay(TimeSpan.FromSeconds(session.DelayBetweenMessages), stoppingToken);
                 }
 
                 session.Status = "Completed";
@@ -170,6 +172,36 @@ namespace GrindSoft.BackgroundServices
             await dbContext.SaveChangesAsync(stoppingToken);
 
             await Task.Delay(TimeSpan.FromSeconds(session.DelayBetweenMessages), stoppingToken);
+        }
+        private async Task ProcessAndSendResponseAsync(Session session, IDiscordClient discordClient, IChatGPTClient chatGPTClient, AppDbContext dbContext, string content, string messageId, string authorId, CancellationToken stoppingToken)
+        {
+            await discordClient.SendTypingAsync();
+
+            var response = await chatGPTClient.SendMessageAsync(content);
+            await discordClient.SendMessageAsync(response, messageId);
+
+            lastBotMessage = response;
+
+            session.Messages.Add(new Message
+            {
+                AuthorId = authorId,
+                Content = content,
+                DateTime = DateTime.UtcNow,
+                SessionId = session.Id
+            });
+
+            session.Messages.Add(new Message
+            {
+                AuthorId = session.AuthorId,
+                Content = response,
+                DateTime = DateTime.UtcNow,
+                SessionId = session.Id
+            });
+
+            dbContext.Sessions.Update(session);
+            await dbContext.SaveChangesAsync(stoppingToken);
+
+            session.LastProcessedMessageId = messageId;
         }
     }
 }
