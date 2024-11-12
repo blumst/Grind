@@ -65,13 +65,14 @@ namespace GrindSoft.BackgroundServices
 
                 var initialMessages = await discordClient.GetLatestMessagesAsync();
                 session.LastProcessedMessageId = initialMessages?.FirstOrDefault().MessageId ?? "0";
+                session.LastProcessedMessageTimestamp = initialMessages?.FirstOrDefault()?.Timestamp;
                 session.Status = "In Progress";
 
                 dbContext.Sessions.Update(session);
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 var lastMessageTime = DateTime.UtcNow;
-                //var waitForAnswerTime = TimeSpan.FromSeconds(session.ModeType == 1 ? 30 : session.DelayBetweenMessages);
+                
                 var random = new Random();
 
                 while (!stoppingToken.IsCancellationRequested)
@@ -81,11 +82,11 @@ namespace GrindSoft.BackgroundServices
                     if (messages != null && messages.Count > 0)
                     {
                         var newMessages = messages
-                            .TakeWhile(m => m.MessageId != session.LastProcessedMessageId)
-                            .Reverse() 
+                            .Where(m => session.LastProcessedMessageTimestamp == null || m.Timestamp > session.LastProcessedMessageTimestamp)
+                            .OrderBy(m => m.Timestamp)
                             .ToList();
 
-                        foreach (var (AuthorId, Content, MessageId) in newMessages)
+                        foreach (var (AuthorId, Content, MessageId, Timestamp) in newMessages)
                         {
                             if (AuthorId != session.AuthorId)
                             {
@@ -104,6 +105,12 @@ namespace GrindSoft.BackgroundServices
                                 }
                                 else
                                     await ProcessAndSendResponseAsync(session, discordClient, chatGPTClient, dbContext, Content, MessageId, AuthorId, stoppingToken);
+                                
+                                session.LastProcessedMessageTimestamp = Timestamp;
+
+                                dbContext.Sessions.Update(session);
+                                await dbContext.SaveChangesAsync(stoppingToken);
+
                             }
                         }
                     }
@@ -157,7 +164,12 @@ namespace GrindSoft.BackgroundServices
         {
             Task.Run(() => discordClient.SendTypingAsync(), stoppingToken);
 
-            var response = await chatGPTClient.SendMessageAsync(prompt);
+            string response;
+            if (session.ModeType == 2 && session.MessagesSentByBot == -1)
+                response = $"<@{session.TargetUserId}> {await chatGPTClient.SendMessageAsync(prompt)}";
+            else
+                response = await chatGPTClient.SendMessageAsync(prompt);
+            
             await discordClient.SendMessageAsync(response);
 
             session.Messages.Add(new Message
@@ -178,30 +190,59 @@ namespace GrindSoft.BackgroundServices
             await discordClient.SendTypingAsync();
 
             var response = await chatGPTClient.SendMessageAsync(content);
-            await discordClient.SendMessageAsync(response, messageId);
+
+            bool isTargetChance = new Random().Next(0, 101) <= 90;
+
+            if (session.ModeType == 2 && !isTargetChance)
+            {
+                var words = response.Split(' ');
+                int midPoint = words.Length / 2;
+
+                var firstPart = string.Join(" ", words.Take(midPoint));
+                var secondPart = string.Join(" ", words.Skip(midPoint));
+
+                await discordClient.SendMessageAsync(firstPart, messageId);
+
+                session.Messages.Add(new Message
+                {
+                    AuthorId = session.AuthorId,
+                    Content = firstPart,
+                    DateTime = DateTime.UtcNow,
+                    SessionId = session.Id
+                });
+
+                dbContext.Sessions.Update(session);
+                await dbContext.SaveChangesAsync(stoppingToken);
+
+                await Task.Delay(TimeSpan.FromSeconds(new Random().Next(2, 4)), stoppingToken);
+                await discordClient.SendMessageAsync(secondPart);
+
+                session.Messages.Add(new Message
+                {
+                    AuthorId = session.AuthorId,
+                    Content = secondPart,
+                    DateTime = DateTime.UtcNow,
+                    SessionId = session.Id
+                });
+            }
+            else
+            {
+                await discordClient.SendMessageAsync(response, messageId);
+
+                session.Messages.Add(new Message
+                {
+                    AuthorId = authorId,
+                    Content = content,
+                    DateTime = DateTime.UtcNow,
+                    SessionId = session.Id
+                });
+            }
 
             lastBotMessage = response;
-
-            session.Messages.Add(new Message
-            {
-                AuthorId = authorId,
-                Content = content,
-                DateTime = DateTime.UtcNow,
-                SessionId = session.Id
-            });
-
-            session.Messages.Add(new Message
-            {
-                AuthorId = session.AuthorId,
-                Content = response,
-                DateTime = DateTime.UtcNow,
-                SessionId = session.Id
-            });
+            session.LastProcessedMessageId = messageId;
 
             dbContext.Sessions.Update(session);
             await dbContext.SaveChangesAsync(stoppingToken);
-
-            session.LastProcessedMessageId = messageId;
         }
     }
 }
