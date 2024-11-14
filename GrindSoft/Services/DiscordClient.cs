@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using GrindSoft.Interface;
 using GrindSoft.Settings;
 using GrindSoft.Models;
+using GrindSoft.Migrations;
 
 namespace GrindSoft.Services
 {
@@ -59,7 +60,7 @@ namespace GrindSoft.Services
             }
         }
 
-        public async Task SendMessageAsync(string message)
+        public async Task SendMessageAsync(string message, string replyToMessageId = null)
         {
             string url = $"{_discordSettings.BaseUrl}/{_sessionContext.ChannelId}/messages";
 
@@ -69,7 +70,12 @@ namespace GrindSoft.Services
                 content = message,
                 nonce = GenerateNonce(),
                 tts = false,
-                flags = 0
+                flags = 0,
+                message_reference = replyToMessageId == null ? null : new
+                {
+                    channel_id = _sessionContext.ChannelId,
+                    message_id = replyToMessageId
+                }
             };
 
             await url
@@ -103,7 +109,8 @@ namespace GrindSoft.Services
             return messages.Select(message => new MessageRecord(
                 AuthorId: message.AuthorId,
                 Content: message.Content,
-                MessageId: message.MessageId
+                MessageId: message.MessageId,
+                Timestamp: message.Timestamp
             )).ToList();
         }
 
@@ -129,16 +136,26 @@ namespace GrindSoft.Services
 
         private static List<MessageRecord> ParseJson(string jsonResponse)
         {
-            JArray messages = JArray.Parse(jsonResponse);
             var messagesList = new List<MessageRecord>();
 
-            foreach (var message in messages)
+            var settings = new JsonSerializerSettings
             {
-                string content = message["content"].ToString();
-                string authorId = message["author"]["id"].ToString();
-                string messageId = message["id"].ToString();
+                DateParseHandling = DateParseHandling.None
+            };
 
-                messagesList.Add(new MessageRecord(authorId, content, messageId));
+            var messagesArray = JsonConvert.DeserializeObject<JArray>(jsonResponse, settings);
+
+            foreach (var message in messagesArray)
+            {
+                string content = message["content"]!.ToString();
+                string authorId = message["author"]!["id"]!.ToString();
+                string messageId = message["id"]!.ToString();
+                string timestampString = message["timestamp"]!.ToString();
+
+                DateTimeOffset dto = DateTimeOffset.Parse(timestampString);
+                DateTime timestamp = dto.UtcDateTime;
+
+                messagesList.Add(new MessageRecord(authorId, content, messageId, timestamp));
             }
 
             return messagesList;

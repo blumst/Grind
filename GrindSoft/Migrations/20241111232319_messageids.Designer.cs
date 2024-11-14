@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GrindSoft.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241023164123_MakeAuthorIdNullable")]
-    partial class MakeAuthorIdNullable
+    [Migration("20241111232319_messageids")]
+    partial class messageids
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,10 +58,28 @@ namespace GrindSoft.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ChannelId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DelayBetweenMessages")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastProcessedMessageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MessageCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MessagesSentByBot")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ModeType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProcessedMessageIds")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -74,6 +92,10 @@ namespace GrindSoft.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetUserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

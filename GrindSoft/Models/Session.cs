@@ -9,11 +9,14 @@
         public string ChannelId { get; set; }
         public string Prompt { get; set; }
         public string Status { get; set; }
-        public List<Message> Messages { get; set; } = new List<Message>();
+        public List<Message> Messages { get; set; } = [];
         public string? AuthorId { get; set; }
         public int MessageCount { get; set; }
         public int DelayBetweenMessages { get; set; }
         public string? LastProcessedMessageId { get; set; } = "0";
+        public DateTime? LastProcessedMessageTimestamp { get; set; }
         public int MessagesSentByBot { get; set; } = -1;
+        public int ModeType { get; set; }
+        public string TargetUserId { get; set; }
     }
 }

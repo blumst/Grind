@@ -67,10 +67,16 @@ namespace GrindSoft.Migrations
                     b.Property<string>("LastProcessedMessageId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("LastProcessedMessageTimestamp")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("MessageCount")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MessagesSentByBot")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ModeType")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Prompt")
@@ -82,6 +88,10 @@ namespace GrindSoft.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetUserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

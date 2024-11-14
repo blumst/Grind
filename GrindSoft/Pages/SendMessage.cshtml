@@ -19,30 +19,50 @@
 
         <form method="post">
             @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label for="ModeType" class="form-label">Mode</label>
+                <select class="form-select" id="ModeType" name="ModeType" required>
+                    <option value="1">Mode 1 (Regular)</option>
+                    <option value="2">Mode 2 (Target Bot Interaction)</option>
+                </select>
+            </div>
+
             <div class="mb-3">
                 <label for="AccessToken" class="form-label">Access Token</label>
                 <input type="text" class="form-control" id="AccessToken" name="AccessToken" value="@Model.AccessToken" required />
             </div>
+
             <div class="mb-3">
                 <label for="UserAgent" class="form-label">User-Agent</label>
                 <input type="text" class="form-control" id="UserAgent" name="UserAgent" value="@Model.UserAgent" required />
             </div>
+
             <div class="mb-3">
                 <label for="ServerId" class="form-label">Server ID</label>
                 <input type="text" class="form-control" id="ServerId" name="ServerId" value="@Model.ServerId" />
             </div>
+
             <div class="mb-3">
                 <label for="ChannelId" class="form-label">Channel ID</label>
                 <input type="text" class="form-control" id="ChannelId" name="ChannelId" value="@Model.ChannelId" required />
             </div>
+
+            <div class="mb-3" id="targetBotField" style="display:none;">
+                <label for="TargetUserId" class="form-label">Target User Id</label>
+                <input type="text" class="form-control" id="TargetUserId" name="TargetUserId" />
+            </div>
+
             <div class="mb-3">
                 <label for="Prompt" class="form-label">Prompt</label>
                 <textarea class="form-control" id="Prompt" name="Prompt" rows="4" required>@Model.Prompt</textarea>
             </div>
-            <div class="mb-3">
+
+            <div class="mb-3" id="numberOfMessagesField">
                 <label for="MessageCount" class="form-label">Number of Messages</label>
                 <input type="number" class="form-control" id="MessageCount" name="MessageCount" value="@Model.MessageCount" min="1" step="1" required />
             </div>
+
             <div class="mb-3">
                 <label for="DelayBetweenMessages" class="form-label">Delay Between Messages (seconds)</label>
                 <input type="number" class="form-control" id="DelayBetweenMessages" name="DelayBetweenMessages" value="@Model.DelayBetweenMessages" min="1" step="1" required />
@@ -61,5 +81,32 @@
 
     <!-- Bootstrap JS and dependencies (optional) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.getElementById('ModeType').addEventListener('change', function () {
+            const targetBotField = document.getElementById('targetBotField');
+            const targetUserIdInput = document.getElementById('TargetUserId'); 
+            const numberOfMessagesField = document.getElementById('numberOfMessagesField');
+            const messageCountInput = document.getElementById('MessageCount');
+
+            if (this.value == '2') {
+                targetBotField.style.display = 'block';
+                targetUserIdInput.setAttribute('required', 'required'); 
+
+                numberOfMessagesField.style.display = 'none';
+                messageCountInput.removeAttribute('required');
+                messageCountInput.removeAttribute('min');
+            } else {
+                targetBotField.style.display = 'none';
+                targetUserIdInput.removeAttribute('required'); 
+
+                numberOfMessagesField.style.display = 'block';
+                messageCountInput.setAttribute('required', 'required');
+                messageCountInput.setAttribute('min', '1');
+            }
+        });
+
+        document.getElementById('ModeType').dispatchEvent(new Event('change'));
+    </script>
 </body>
 </html>
