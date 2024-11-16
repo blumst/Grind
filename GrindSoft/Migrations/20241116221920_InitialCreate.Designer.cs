@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GrindSoft.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241109202600_Mode2Create")]
-    partial class Mode2Create
+    [Migration("20241116221920_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,6 +68,9 @@ namespace GrindSoft.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("LastProcessedMessageId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastProcessedMessageTimestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("MessageCount")

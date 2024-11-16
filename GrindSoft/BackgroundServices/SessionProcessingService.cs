@@ -72,11 +72,25 @@ namespace GrindSoft.BackgroundServices
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 var lastMessageTime = DateTime.UtcNow;
-                
+
+                if (session.ModeType == 1)
+                {
+                    session.MessagesSentByBot = -1; 
+                    await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, session.Prompt, stoppingToken);
+                    session.MessagesSentByBot++;
+                    lastMessageTime = DateTime.UtcNow;
+
+                    dbContext.Sessions.Update(session);
+                    await dbContext.SaveChangesAsync(stoppingToken);
+                }
+
                 var random = new Random();
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
+                    if (session.ModeType == 1 && session.MessagesSentByBot >= session.MessageCount)
+                        break;
+
                     var messages = await discordClient.GetLatestMessagesAsync();
 
                     if (messages != null && messages.Count > 0)
