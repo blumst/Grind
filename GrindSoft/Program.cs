@@ -14,6 +14,12 @@ namespace GrindSoft
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+            builder.Configuration.AddEnvironmentVariables();
+
+            var configuration = builder.Configuration;
+
             builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("DiscordSettings"));
             builder.Services.Configure<ChatGptSettings>(builder.Configuration.GetSection("ChatGptSettings"));
 
@@ -27,6 +33,15 @@ namespace GrindSoft
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddDistributedMemoryCache();
+
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
             var app = builder.Build();
 
@@ -45,6 +60,28 @@ namespace GrindSoft
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
+
+            app.Use(async (context, next) =>
+            {
+                var config = context.RequestServices.GetRequiredService<IConfiguration>();
+                var expectedPassword = config["AppSettings:PasswordHash"];
+
+                if (context.Request.Path.StartsWithSegments("/Login"))
+                {
+                    await next.Invoke();
+                    return;
+                }
+
+                if (!context.Session.Keys.Contains("Authenticated"))
+                {
+                    context.Response.Redirect("/Login");
+                    return;
+                }
+
+                await next.Invoke();
+            });
 
             app.UseAuthorization();
 
