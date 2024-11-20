@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using GrindSoft.Interface;
 using GrindSoft.Settings;
 using GrindSoft.Models;
-using GrindSoft.Migrations;
 
 namespace GrindSoft.Services
 {

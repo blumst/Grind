@@ -23,7 +23,16 @@ namespace GrindSoft.Migrations
                     ChannelId = table.Column<string>(type: "TEXT", nullable: false),
                     Prompt = table.Column<string>(type: "TEXT", nullable: false),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
-                    AuthorId = table.Column<string>(type: "TEXT", nullable: false)
+                    AuthorId = table.Column<string>(type: "TEXT", nullable: true),
+                    MessageCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    DelayBetweenMessages = table.Column<int>(type: "INTEGER", nullable: false),
+                    LastProcessedMessageId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastProcessedMessageTimestamp = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    MessagesSentByBot = table.Column<int>(type: "INTEGER", nullable: false),
+                    ModeType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TargetUserId = table.Column<string>(type: "TEXT", nullable: false),
+                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

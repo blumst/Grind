@@ -64,6 +64,9 @@ namespace GrindSoft.Migrations
                     b.Property<int>("DelayBetweenMessages")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastProcessedMessageId")
                         .HasColumnType("TEXT");
 
@@ -85,6 +88,9 @@ namespace GrindSoft.Migrations
 
                     b.Property<string>("ServerId")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")

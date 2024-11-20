@@ -2,6 +2,7 @@ using GrindSoft.Models;
 using GrindSoft.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace GrindSoft.Pages
@@ -46,6 +47,8 @@ namespace GrindSoft.Pages
 
         public string? Response { get; set; }
 
+        public int? SessionId { get; set; }
+
         public void OnGet()
         {
 
@@ -76,10 +79,14 @@ namespace GrindSoft.Pages
                     MessageCount = MessageCount,
                     DelayBetweenMessages = DelayBetweenMessages,
                     ModeType = ModeType,
-                    TargetUserId = ModeType == 2 ? TargetUserId : ""
+                    TargetUserId = ModeType == 2 ? TargetUserId : "",
+                    StartTime = DateTime.UtcNow
                 };
 
             _sessionManager.AddSession(session);
+            await _dbContext.SaveChangesAsync();
+
+            SessionId = _sessionManager.GetSessions();
 
             Response = "Session started and is in progress.";
             return Page();

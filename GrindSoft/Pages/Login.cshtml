@@ -1,0 +1,27 @@
+﻿@page
+@model GrindSoft.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <h2 class="text-center">Login</h2>
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+            <form method="post">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label for="Password">Password:</label>
+                    <input type="password" name="Password" class="form-control" id="Password" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
+            </form>
+        </div>
+    </div>
+</div>
