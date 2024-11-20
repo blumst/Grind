@@ -68,6 +68,10 @@ namespace GrindSoft.BackgroundServices
                 var lastMessageTime = DateTime.UtcNow;
                 var random = new Random();
 
+                CancellationTokenSource initialPingCts = null;
+                Task initialPingTask = Task.CompletedTask;
+
+
                 if (session.ModeType == 1)
                 { 
                     await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, session.Prompt, stoppingToken);
@@ -78,19 +82,19 @@ namespace GrindSoft.BackgroundServices
                 }
                 else if (session.ModeType == 2)
                 {
-                    _ = Task.Run(async () =>
+                    initialPingCts = new CancellationTokenSource();
+
+                    initialPingTask = Task.Run(async () =>
                     {
-                        int delay = random.Next(15, 31);
-                        await Task.Delay(TimeSpan.FromSeconds(delay), stoppingToken);
+                            int delay = random.Next(15, 31);
+                            await Task.Delay(TimeSpan.FromSeconds(delay), initialPingCts.Token);
 
-                        if (session.MessagesSentByBot == 0)
-                        {
-                            await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, session.Prompt, stoppingToken);
-                            lastMessageTime = DateTime.UtcNow;
-
-                            dbContext.Sessions.Update(session);
-                            await dbContext.SaveChangesAsync(stoppingToken);
-                        }
+                            if (!initialPingCts.Token.IsCancellationRequested && session.MessagesSentByBot == 0)
+                            {
+                                await AutoSendBotMessageAsync(session, discordClient, chatGPTClient, dbContext, session.Prompt, stoppingToken);
+                                dbContext.Sessions.Update(session);
+                                await dbContext.SaveChangesAsync(stoppingToken);
+                            }  
                     }, stoppingToken);
                 }
 
@@ -112,8 +116,6 @@ namespace GrindSoft.BackgroundServices
                         {
                             if (AuthorId != session.AuthorId)
                             {
-                                lastMessageTime = DateTime.UtcNow;
-
                                 if (session.ModeType == 2)
                                 {
                                     bool isTargetUser = new Random().Next(0, 101) <= 90;
@@ -121,6 +123,8 @@ namespace GrindSoft.BackgroundServices
                                     string targetAuthorId = isTargetUser ? session.TargetUserId : messages[new Random().Next(0, messages.Count)].AuthorId;
 
                                     if (targetAuthorId == null || targetAuthorId != AuthorId) continue;
+
+                                    initialPingCts?.Cancel();
 
                                     await ProcessAndSendResponseAsync(session, discordClient, chatGPTClient, dbContext, Content, MessageId, AuthorId, stoppingToken);
                                 }
@@ -137,6 +141,15 @@ namespace GrindSoft.BackgroundServices
                     }
 
                     await Task.Delay(TimeSpan.FromSeconds(session.DelayBetweenMessages), stoppingToken);
+                }
+
+                if (session.ModeType == 2)
+                {
+                    try
+                    {
+                        await initialPingTask;
+                    }
+                    catch (TaskCanceledException) { }
                 }
 
                 session.Status = "Completed";
