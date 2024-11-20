@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GrindSoft.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241116221920_InitialCreate")]
+    [Migration("20241120100535_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -67,6 +67,9 @@ namespace GrindSoft.Migrations
                     b.Property<int>("DelayBetweenMessages")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastProcessedMessageId")
                         .HasColumnType("TEXT");
 
@@ -88,6 +91,9 @@ namespace GrindSoft.Migrations
 
                     b.Property<string>("ServerId")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")

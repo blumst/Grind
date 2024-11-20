@@ -10,7 +10,7 @@ namespace GrindSoft
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -18,21 +18,19 @@ namespace GrindSoft
 
             builder.Configuration.AddEnvironmentVariables();
 
-            var configuration = builder.Configuration;
-
             builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("DiscordSettings"));
             builder.Services.Configure<ChatGptSettings>(builder.Configuration.GetSection("ChatGptSettings"));
 
             builder.Services.AddRazorPages();
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddScoped<IDiscordClient, DiscordClient>();
             builder.Services.AddScoped<IChatGPTClient, ChatGPTClient>();
             builder.Services.AddSingleton<SessionManager>();
 
             builder.Services.AddHostedService<SessionProcessingService>();
-
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddDistributedMemoryCache();
 
@@ -44,6 +42,13 @@ namespace GrindSoft
             });
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Database.EnsureDeleted();
+                await dbContext.Database.MigrateAsync();
+            }
 
             if (app.Environment.IsDevelopment())
             {
@@ -87,13 +92,9 @@ namespace GrindSoft
 
             app.MapRazorPages();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.MigrateAsync();
-            }
+            app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

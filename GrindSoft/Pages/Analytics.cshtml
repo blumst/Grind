@@ -1,0 +1,82 @@
+﻿@page "/Analytics"
+@model GrindSoft.Pages.AnalyticsModel
+@{
+    ViewData["Title"] = "Analytics";
+}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - GrindSoft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        .progress {
+            height: 30px;
+        }
+
+        .progress-bar {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .analytics-content {
+            font-size: 1.5rem; 
+            line-height: 2; 
+        }
+
+        .analytics-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Session analytics</h2>
+
+        <div 
+            id="analyticsContent" class="analytics-content">
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+ 
+        const sessionId = parseInt('@Model.SessionId', 10);
+
+        if (isNaN(sessionId) || sessionId <= 0) {
+            document.getElementById('analyticsContent').innerHTML = `
+                                <div class='alert alert-warning'>
+                                            <strong>Warning:</strong> Invalid session ID.
+                                </div>`;
+        } else {
+            async function loadAnalytics() {
+                try {
+                    const response = await fetch(`/Analytics?handler=Data&sessionId=${sessionId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! статус: ${response.status}`);
+                    }
+                    const data = await response.text();
+                    document.getElementById('analyticsContent').innerHTML = data;
+                } catch (error) {
+                    console.error('Error loading analytics:', error);
+                    document.getElementById('analyticsContent').innerHTML = `
+                                        <div class='alert alert-danger'>
+                                                    <strong>Error:</strong> Failed to load analytics data.
+                                        </div>`;
+                }
+            }
+
+            loadAnalytics();
+
+            setInterval(loadAnalytics, 5000);
+        }
+    </script>
+</body>
+</html>

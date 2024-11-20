@@ -30,7 +30,9 @@ namespace GrindSoft.Migrations
                     LastProcessedMessageTimestamp = table.Column<DateTime>(type: "TEXT", nullable: true),
                     MessagesSentByBot = table.Column<int>(type: "INTEGER", nullable: false),
                     ModeType = table.Column<int>(type: "INTEGER", nullable: false),
-                    TargetUserId = table.Column<string>(type: "TEXT", nullable: false)
+                    TargetUserId = table.Column<string>(type: "TEXT", nullable: false),
+                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

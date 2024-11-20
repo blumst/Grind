@@ -1,4 +1,7 @@
-﻿namespace GrindSoft.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+
+namespace GrindSoft.Models
 {
     public class Session
     {
@@ -15,8 +18,10 @@
         public int DelayBetweenMessages { get; set; }
         public string? LastProcessedMessageId { get; set; } = "0";
         public DateTime? LastProcessedMessageTimestamp { get; set; }
-        public int MessagesSentByBot { get; set; } = -1;
+        public int MessagesSentByBot { get; set; } = 0;
         public int ModeType { get; set; }
         public string TargetUserId { get; set; }
+        public DateTime StartTime { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 }

@@ -16,5 +16,10 @@ namespace GrindSoft.Services
         {
             return _sessions.TryDequeue(out session);
         }
+
+        public int GetSessions()
+        {
+            return _sessions.Count;
+        }
     }
 }
