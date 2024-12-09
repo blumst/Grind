@@ -9,5 +9,8 @@ namespace GrindSoft.Interface
         Task<List<MessageRecord>> GetLatestMessagesAsync();
         Task SendMessageAsync(string message, string replyToMessageId = null);
         Task SendTypingAsync();
+        Task<string> SendMessageAndGetIdAsync(string message);
+        Task DeleteMessageAsync(string messageId);
+        void InitializeDeletionMechanism();
     }
 }

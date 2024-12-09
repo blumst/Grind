@@ -10,7 +10,7 @@ namespace GrindSoft.Models
         public string UserAgent { get; set; }
         public string ServerId { get; set; }
         public string ChannelId { get; set; }
-        public string Prompt { get; set; }
+        public string? Prompt { get; set; }
         public string Status { get; set; }
         public List<Message> Messages { get; set; } = [];
         public string? AuthorId { get; set; }
@@ -21,6 +21,7 @@ namespace GrindSoft.Models
         public int MessagesSentByBot { get; set; } = 0;
         public int ModeType { get; set; }
         public string TargetUserId { get; set; }
+        public string? Message { get; set; }
         public DateTime StartTime { get; set; }
         public string? ErrorMessage { get; set; }
     }
