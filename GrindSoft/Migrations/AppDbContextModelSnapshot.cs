@@ -73,6 +73,9 @@ namespace GrindSoft.Migrations
                     b.Property<DateTime?>("LastProcessedMessageTimestamp")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Message")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("MessageCount")
                         .HasColumnType("INTEGER");
 
@@ -83,7 +86,6 @@ namespace GrindSoft.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Prompt")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ServerId")

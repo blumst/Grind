@@ -25,6 +25,7 @@
                 <select class="form-select" id="ModeType" name="ModeType" required>
                     <option value="1" @(Model.ModeType == 1 ? "selected" : "")>Mode 1 (Regular)</option>
                     <option value="2" @(Model.ModeType == 2 ? "selected" : "")>Mode 2 (Target Bot Interaction)</option>
+                    <option value="3" @(Model.ModeType == 3 ? "selected" : "")>Mode 3 (Send and Delete Message)</option>
                 </select>
             </div>
 
@@ -53,9 +54,14 @@
                 <input type="text" class="form-control" id="TargetUserId" name="TargetUserId" value="@Model.TargetUserId" />
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3" id="promptField">
                 <label for="Prompt" class="form-label">Prompt</label>
                 <textarea class="form-control" id="Prompt" name="Prompt" rows="4" required>@Model.Prompt</textarea>
+            </div>
+
+            <div class="mb-3" id="messageField" style="display:none;">
+                <label for="Message" class="form-label">Message</label>
+                <textarea class="form-control" id="Message" name="Message" rows="4">@Model.Message</textarea>
             </div>
 
             <div class="mb-3">
@@ -91,13 +97,38 @@
             const modeTypeSelect = document.getElementById('ModeType');
             const targetBotField = document.getElementById('targetBotField');
             const targetUserIdInput = document.getElementById('TargetUserId');
+            const promptField = document.getElementById('promptField');
+            const messageField = document.getElementById('messageField');
+            const promptInput = document.getElementById('Prompt');
+            const messageInput = document.getElementById('Message');
 
             if (modeTypeSelect.value == '2') {
                 targetBotField.style.display = 'block';
                 targetUserIdInput.setAttribute('required', 'required');
+
+                promptField.style.display = 'block';
+                promptInput.setAttribute('required', 'required');
+
+                messageField.style.display = 'none';
+                messageInput.removeAttribute('required');
+            } else if (modeTypeSelect.value == '3') {
+                targetBotField.style.display = 'none';
+                targetUserIdInput.removeAttribute('required');
+
+                promptField.style.display = 'none';
+                promptInput.removeAttribute('required');
+
+                messageField.style.display = 'block';
+                messageInput.setAttribute('required', 'required');
             } else {
                 targetBotField.style.display = 'none';
                 targetUserIdInput.removeAttribute('required');
+
+                promptField.style.display = 'block';
+                promptInput.setAttribute('required', 'required');
+
+                messageField.style.display = 'none';
+                messageInput.removeAttribute('required');
             }
         }
 

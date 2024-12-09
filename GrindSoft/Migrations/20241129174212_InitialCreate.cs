@@ -21,7 +21,7 @@ namespace GrindSoft.Migrations
                     UserAgent = table.Column<string>(type: "TEXT", nullable: false),
                     ServerId = table.Column<string>(type: "TEXT", nullable: false),
                     ChannelId = table.Column<string>(type: "TEXT", nullable: false),
-                    Prompt = table.Column<string>(type: "TEXT", nullable: false),
+                    Prompt = table.Column<string>(type: "TEXT", nullable: true),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
                     AuthorId = table.Column<string>(type: "TEXT", nullable: true),
                     MessageCount = table.Column<int>(type: "INTEGER", nullable: false),
@@ -31,6 +31,7 @@ namespace GrindSoft.Migrations
                     MessagesSentByBot = table.Column<int>(type: "INTEGER", nullable: false),
                     ModeType = table.Column<int>(type: "INTEGER", nullable: false),
                     TargetUserId = table.Column<string>(type: "TEXT", nullable: false),
+                    Message = table.Column<string>(type: "TEXT", nullable: true),
                     StartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
                     ErrorMessage = table.Column<string>(type: "TEXT", nullable: true)
                 },

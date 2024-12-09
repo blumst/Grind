@@ -45,6 +45,9 @@ namespace GrindSoft.Pages
         [BindProperty]
         public string TargetUserId { get; set; }
 
+        [BindProperty]
+        public string Message { get; set; }
+
         public string? Response { get; set; }
 
         public int? SessionId { get; set; }
@@ -58,10 +61,19 @@ namespace GrindSoft.Pages
         {
             if (ModeType == 2 && string.IsNullOrWhiteSpace(TargetUserId))
                 ModelState.AddModelError("TargetUserId", "TargetUserId is required for Mode 2.");
-            
-            if (ModeType == 1)
+
+            if (ModeType == 3 && string.IsNullOrWhiteSpace(Message))
+                ModelState.AddModelError("Message", "Message is required for Mode 3.");
+
+            if (ModeType == 1 || ModeType == 2)
+                ModelState.Remove("Message");
+
+            if (ModeType == 1 || ModeType == 3)
                 ModelState.Remove("TargetUserId");
-            
+
+            if (ModeType == 3)
+                ModelState.Remove("Prompt");
+
             if (!ModelState.IsValid)
             {
                 Response = "Please fill in all required fields.";
@@ -74,7 +86,8 @@ namespace GrindSoft.Pages
                     UserAgent = UserAgent,
                     ServerId = ServerId ?? "@me",
                     ChannelId = ChannelId,
-                    Prompt = Prompt,
+                    Prompt = ModeType == 3 ? null : Prompt,
+                    Message = ModeType == 3 ? Message : null,
                     Status = "In Progress",
                     MessageCount = MessageCount,
                     DelayBetweenMessages = DelayBetweenMessages,
